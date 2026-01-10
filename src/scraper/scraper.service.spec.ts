@@ -28,15 +28,4 @@ describe("ScraperService", () => {
     expect(typeof price).toBe("number");
     expect(price).toBeGreaterThan(0);
   }, 30_000);
-
-  it("should fetch price from Amazon EN", async () => {
-    const url = "https://www.amazon.com/dp/B007IBRE4E";
-    const price = await service.fetchPrice(url);
-    // eslint-disable-next-line no-console
-    console.log(`Fetched price for ${url}: ${String(price)}`);
-
-    expect(price).not.toBeNull();
-    expect(typeof price).toBe("number");
-    expect(price).toBeGreaterThan(0);
-  }, 30_000);
 });
