@@ -26,6 +26,8 @@ model Offer {
   id          String   @id @default(uuid())
   url         String
   targetPrice Decimal
+  currentPrice Decimal?
+  lastCheckedAt DateTime?
   userId      String
   user        User     @relation(fields: [userId], references: [id])
   createdAt   DateTime @default(now())

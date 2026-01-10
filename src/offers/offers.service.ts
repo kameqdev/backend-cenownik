@@ -1,16 +1,30 @@
 import { Injectable } from "@nestjs/common";
 
 import { PrismaService } from "../prisma/prisma.service";
+import { ScraperService } from "../scraper/scraper.service";
 import { CreateOfferDto } from "./dto/create-offer.dto";
 import { UpdateOfferDto } from "./dto/update-offer.dto";
 
 @Injectable()
 export class OffersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly scraperService: ScraperService,
+  ) {}
 
   async create(createOfferDto: CreateOfferDto) {
+    const currentPrice = await this.scraperService.fetchPrice(
+      createOfferDto.url,
+    );
+
     return this.prisma.offer.create({
-      data: createOfferDto,
+      data: {
+        url: createOfferDto.url,
+        targetPrice: createOfferDto.targetPrice,
+        userId: createOfferDto.userId,
+        currentPrice: currentPrice ?? undefined,
+        lastCheckedAt: currentPrice === null ? undefined : new Date(),
+      },
     });
   }
 
