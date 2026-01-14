@@ -1,6 +1,7 @@
 import type { TestingModule } from "@nestjs/testing";
 import { Test } from "@nestjs/testing";
 
+import { MailService } from "../mail/mail.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { ScraperService } from "../scraper/scraper.service";
 import { OffersController } from "./offers.controller";
@@ -19,6 +20,12 @@ describe("OffersController", () => {
           provide: ScraperService,
           useValue: {
             fetchPrice: jest.fn(),
+          },
+        },
+        {
+          provide: MailService,
+          useValue: {
+            sendPriceDropNotification: jest.fn(),
           },
         },
       ],

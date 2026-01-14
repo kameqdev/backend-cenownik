@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 
+import { MailService } from "../mail/mail.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { ScraperService } from "../scraper/scraper.service";
 import { CreateOfferDto } from "./dto/create-offer.dto";
@@ -13,6 +14,7 @@ export class OffersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly scraperService: ScraperService,
+    private readonly mailService: MailService,
   ) {}
 
   async create(createOfferDto: CreateOfferDto) {
@@ -54,10 +56,12 @@ export class OffersService {
     });
   }
 
-  @Cron(CronExpression.EVERY_4_HOURS)
+  @Cron(process.env.SCRAPER_CRON_SCHEDULE ?? CronExpression.EVERY_4_HOURS)
   async updateAllPrices() {
     this.logger.log("Starting scheduled price update...");
-    const offers = await this.prisma.offer.findMany();
+    const offers = await this.prisma.offer.findMany({
+      include: { user: true },
+    });
 
     for (const offer of offers) {
       try {
@@ -80,6 +84,15 @@ export class OffersService {
           this.logger.log(
             `Updated price for offer ${offer.id}: ${String(currentPrice)}`,
           );
+
+          if (currentPrice <= offer.targetPrice.toNumber()) {
+            await this.mailService.sendPriceDropNotification(
+              offer.user.email,
+              offer.url,
+              currentPrice,
+              offer.targetPrice.toNumber(),
+            );
+          }
         }
       } catch (error) {
         this.logger.error(
